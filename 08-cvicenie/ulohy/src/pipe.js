@@ -9,8 +9,15 @@ function pipe(...fns) {
   // urcite to bude vracat funkciu 
   // len ju nejako musite poskladat
   // ako ? musite vediet precitat ten reduce hore
-  let r=function(){};
-  return r;
+  return function (a) {
+
+    let b = a;
+  
+    for (let fn of fns) {
+      b = fn(b);
+    }
+    return b;
+  };
 }
 module.exports = pipe;
 

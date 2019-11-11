@@ -18,6 +18,7 @@ describe("FP - array functions", function() {
     // pozrite si strukturu objektov v poli a implementujte
     // zoznam studentov ktorym chyba git repo
     let missingGit = []; //TODO: implement
+    missingGit = students.filter(s => !s.git);
 
 
     //debug(JSON.stringify(missingGit, null, 2));
@@ -27,7 +28,13 @@ describe("FP - array functions", function() {
     )
   });
 
-  function fixProjects(student) { return { ...student } }
+  function fixProjects(student) {
+    let {projects = ""} = student;
+     
+    return { ...student,
+          projects: projects?projects.split(',').map(s=>s.trim()).filter(Boolean): [] } 
+    
+  }
 
   it("03-students with better project structure", () => {
     // TODO: student.project is string delimited by ","
@@ -50,7 +57,7 @@ describe("FP - array functions", function() {
     let students4 = students
       .map(fixProjects)
     // TODO:
-
+    students4 = students4.filter(s => s.projects.length < 3);
     //debug(JSON.stringify(students4, null, 2));
     assert.deepStrictEqual(
       students4.map(s => s["#"]),
@@ -60,12 +67,22 @@ describe("FP - array functions", function() {
 
 
   function fixPoints(student) {
+    var allProps = points(student);
+    
+    var pts = allProps.map(k => student[k]);
+    
     return {
       // vrati original properties studenta
       ...student,
       // a dopocitanu novu property points
-      points: [] //TODO: implement
+      points: pts //TODO: implement
     }
+  }
+
+  function points(student) {
+    var allProps = Object.keys(student);
+    allProps = allProps.filter(s => s.startsWith('points'));
+    return allProps;
   }
 
   it("05-restructire points", () => {
@@ -87,7 +104,7 @@ describe("FP - array functions", function() {
 
   
   function totalPoints(student) {
-    // TODO: implementujte
+    return student.points.reduce( (a, b) => a+b);
   }
 
   it("06-total points of each student", () => {
@@ -99,7 +116,7 @@ describe("FP - array functions", function() {
       .map(totalPoints)
 
     studentsWithPoints.forEach(s => {
-      debug(JSON.stringify(s, null, 2));
+      //debug(JSON.stringify(s, null, 2));
       assert.strictEqual(s.totalPoints, s.__totalPoints, `Fail for ${s["#"]}`);
     });
 
@@ -110,10 +127,9 @@ describe("FP - array functions", function() {
     // za vsetkych 
     let sumOfAll = students
       .map(fixPoints)
-      .map(totalPoints)
-      //.????()
+      .map(totalPoints).reduce((a,b)=>a+b);
 
-    debug(sumOfAll);
+    //debug(sumOfAll);
     assert(sumOfAll === 924);
   });
 
@@ -140,9 +156,14 @@ describe("FP - array functions", function() {
     let groupedByProject = students
       .map(fixProjects)
       .reduce((uniqueProjects, student) => {
-        // TODO: 
+        student.projects.forEach((project) => {
+          uniqueProjects.has(project) || uniqueProjects.set(project, []);
+          uniqueProjects.get(project).push(student);
+        });
+        return uniqueProjects;
 
       }, new Map())
+
     // convert map entries to array
     groupedByProject = [...groupedByProject];
     
@@ -160,11 +181,21 @@ describe("FP - array functions", function() {
     // aby vysledok vysiel podla duplicate-projects.json
     let duplicateProjects = students
       .map(fixProjects)
+      .reduce((uniqueProjects, student) => {
+        student.projects.forEach((project) => {
+          uniqueProjects.has(project) || uniqueProjects.set(project, []);
+          uniqueProjects.get(project).push(student['#']);
+        });
+        return uniqueProjects;
+      }, new Map())
       //. TODO:
       //.
       //.
       //
-    debug(JSON.stringify(duplicateProjects, null, 2));
+      duplicateProjects = [...duplicateProjects];
+      duplicateProjects = duplicateProjects.map((projekt) => ({'project':projekt[0], 'students':projekt[1]}));
+      duplicateProjects = duplicateProjects.filter(x => x.students.length > 1);
+    //debug(JSON.stringify(duplicateProjects, null, 2));
     assert.deepStrictEqual(
       duplicateProjects,
       require("./data/duplicate-projects.json")
