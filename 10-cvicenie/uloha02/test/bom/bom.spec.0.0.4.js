@@ -29,4 +29,48 @@ describe("bom.js tests", function() {
         });
       });
   });
+  it("remove bom - should remove bom with arbitrary chunk sizes", (done) => {
+
+    var chunks = [];
+
+    let file = `${__dirname}/data/with-bom.txt`;
+    fs.createReadStream(file, { highWaterMark: 2 })
+      .pipe(bom.remove())
+      .on("error", done)
+      .on("data", (chunk) => chunks.push(chunk))
+      .on("finish", () => {
+
+        let chunk = Buffer.concat(chunks);
+
+        fs.readFile(file, (err, data) => {
+          assert(
+            chunk.equals(data.slice(3)),
+            `unexpected \n${JSON.stringify(chunk)}`
+          );
+          done();
+        });
+      });
+  });
+  it("remove bom - should do nothing to file without bom with arbitrary chunk sizes", (done) => {
+
+    var chunks = [];
+
+    let file = `${__dirname}/data/without-bom.txt`;
+    fs.createReadStream(file, { highWaterMark: 2 })
+      .pipe(bom.remove())
+      .on("error", done)
+      .on("data", (chunk) => chunks.push(chunk))
+      .on("finish", () => {
+
+        let chunk = Buffer.concat(chunks);
+
+        fs.readFile(file, (err, data) => {
+          assert(
+            chunk.equals(data),
+            `unexpected \n${JSON.stringify(chunk)}`
+          );
+          done();
+        });
+      });
+  });
 });

@@ -25,4 +25,23 @@ describe("bom.js tests", function() {
         done();
       });
   });
+
+  it("[BUG] shall not buffer all until _flush", (done) => {
+
+    let called = 0;
+
+    let file = `${__dirname}/data/with-bom.txt`;
+    fs.createReadStream(file, { highWaterMark: 1 })
+      .pipe(bom.remove())
+      .on("error", done)
+      .on("data", (chunk) => {
+        called++;
+        
+      })
+      .on("finish", () => {
+        //assert(called===1, "all buffered before")
+        assert(called === '// with'.length) // 1 less because there is no bom push call
+        done();
+      });
+  });
 });

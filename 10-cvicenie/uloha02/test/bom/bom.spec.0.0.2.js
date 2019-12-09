@@ -26,4 +26,25 @@ describe("bom.js tests", function() {
         done();
       });
   });
+
+   it("remove bom - do nothing with empty file", function(done) {
+
+    var chunks = [];
+
+    let file = `${__dirname}/data/without-bom-empty.txt`;
+    fs.createReadStream(file)
+      .pipe(bom.remove())
+      .on("error", done)
+      .on("data", (chunk) => chunks.push(chunk))
+      .on("finish", () => {
+
+        let chunk = Buffer.concat(chunks);
+
+        assert.equal(chunk.indexOf(bomBuffer), -1);
+        assert.equal(chunk.length, 0);
+
+        done();
+      });
+  });
+
 });
